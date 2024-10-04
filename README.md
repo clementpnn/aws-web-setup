@@ -123,11 +123,11 @@ To connect to the EC2 server from your terminal, follow these steps:
 3. Use the following SSH command to connect to the server:
 
 ```bash
-ssh -i "~/.ssh/id_rsa" debian@<public_ip>
+ssh -i "~/.ssh/id_rsa" admin@<public_ip>
 ```
 
 - ```-i "~/.ssh/id_rsa"```: This specifies the path to the private key (```id_rsa```). Adjust the path if your private key is stored elsewhere.
-- ```debian@<public_ip>```: This specifies the user (```debian``` for Debian-based images, adjust if you're using a different distribution) and the public IP address of your EC2 instance.
+- ```admin@<public_ip>```: This specifies the user (```admin``` for Debian-based images, adjust if you're using a different distribution) and the public IP address of your EC2 instance.
 
 Once connected, you can run any commands on the server, including verifying Docker installation.
 
