@@ -1,0 +1,14 @@
+# Platform specific
+.DS_Store
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+.terraformrc
+terraform.rc
+.terraform.lock.hcl
+*.swp
+*.log

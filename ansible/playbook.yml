@@ -1,0 +1,7 @@
+- name: Configure Severs
+  become: true
+  hosts: all
+  roles:
+    - geerlingguy.docker
+  vars:
+    docker_install_compose: true
