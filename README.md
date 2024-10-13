@@ -51,7 +51,7 @@ cd aws-web-setup
 ├── ansible
 │   └── playbook.yml
 ├── terraform
-|   ├── 00_providers.tf
+│   ├── 00_providers.tf
 │   ├── 00_variables.tf
 │   ├── 01_keypairs.tf
 │   ├── 02_networks.tf
