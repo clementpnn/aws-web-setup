@@ -1,0 +1,9 @@
+pg_replication:
+  query: "SELECT * FROM pg_stat_replication"
+  metrics:
+    - application_name:
+        usage: "LABEL"
+        description: "Application name"
+    - state:
+        usage: "LABEL"
+        description: "Replication state"

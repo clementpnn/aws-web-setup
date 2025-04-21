@@ -4,7 +4,7 @@ This project utilizes **Terraform** to deploy an EC2 instance on AWS, followed b
 
 ## Prerequisites
 
-### 1. Install Terraform
+### 1. Install Terraforms
 Terraform must be installed on your machine. You can download and install it from the official site: [Terraform Downloads](https://www.terraform.io/downloads.html).
 
 ### 2. Install AWS CLI

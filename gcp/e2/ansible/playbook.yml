@@ -1,0 +1,136 @@
+- name: Configure Servers
+  become: true
+  hosts: all
+  roles:
+    - geerlingguy.docker
+  vars:
+    docker_install_compose: true
+
+  tasks:
+    - name: Copy SQL initialization script
+      copy:
+        src: "../sql/init.sql"
+        dest: "/opt/init.sql"
+        mode: "0644"
+
+    - name: Create Prometheus configuration directory
+      file:
+        path: "/opt/prometheus"
+        state: directory
+        mode: "0755"
+
+    - name: Create Prometheus configuration file
+      copy:
+        dest: "/opt/prometheus/prometheus.yml"
+        content: |
+          global:
+            scrape_interval: 15s
+
+          scrape_configs:
+            - job_name: 'docker'
+              static_configs:
+                - targets: ['backend:3000', 'db:5432']
+
+    - name: Create Docker Compose file
+      copy:
+        dest: "/opt/docker-compose.yml"
+        content: |
+          version: "3.8"
+
+          services:
+            nginx-proxy-manager:
+              image: jc21/nginx-proxy-manager:latest
+              container_name: nginx-proxy-manager
+              restart: always
+              ports:
+                - "80:80"
+                - "443:443"
+                - "81:81"
+              environment:
+                DB_SQLITE_FILE: "/data/database.sqlite"
+              volumes:
+                - "/opt/nginx-proxy/data:/data"
+                - "/opt/nginx-proxy/letsencrypt:/etc/letsencrypt"
+              networks:
+                - nginx_proxy_network
+
+            frontend:
+              image: "ghcr.io/clementpnn/unicloud-frontend:latest"
+              restart: always
+              container_name: frontend
+              networks:
+                - nginx_proxy_network
+              ports:
+                - "8081:80"
+
+            backend:
+              image: "ghcr.io/clementpnn/unicloud-backend:latest"
+              restart: always
+              container_name: backend
+              environment:
+                POSTGRES_USER: "{{ db_user }}"
+                POSTGRES_PASSWORD: "{{ db_password }}"
+                POSTGRES_DB: "{{ db_name }}"
+              networks:
+                - nginx_proxy_network
+              ports:
+                - "8082:3000"
+
+            db:
+              image: "postgres:latest"
+              restart: always
+              environment:
+                POSTGRES_USER: "{{ db_user }}"
+                POSTGRES_PASSWORD: "{{ db_password }}"
+                POSTGRES_DB: "{{ db_name }}"
+              volumes:
+                - "db_data:/var/lib/postgresql/data"
+              networks:
+                - nginx_proxy_network
+
+            prometheus:
+              image: prom/prometheus:latest
+              container_name: prometheus
+              restart: always
+              volumes:
+                - "/opt/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+              ports:
+                - "9090:9090"
+              networks:
+                - nginx_proxy_network
+
+            grafana:
+              image: grafana/grafana:latest
+              container_name: grafana
+              restart: always
+              environment:
+                - GF_SECURITY_ADMIN_PASSWORD={{ db_password }}
+              ports:
+                - "3000:3000"
+              networks:
+                - nginx_proxy_network
+              depends_on:
+                - prometheus
+
+          networks:
+            nginx_proxy_network:
+              name: nginx_proxy_network
+              external: true
+
+          volumes:
+            db_data:
+
+    - name: Ensure Docker network exists
+      community.docker.docker_network:
+        name: nginx_proxy_network
+        state: present
+
+    - name: Start services
+      community.docker.docker_compose_v2:
+        project_src: /opt
+        services:
+          - nginx-proxy-manager
+          - db
+          - prometheus
+          - grafana
+        state: present
